@@ -3,7 +3,7 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical"
-    android:minWidth="200dp" 
+    android:minWidth="250dp" 
     android:minHeight="140dp">
 
     <ImageView
@@ -36,7 +36,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:layout_marginLeft="30dp" >
+        android:layout_marginLeft="15dp" >
         
         <Button
             android:id="@+id/confirm_search_by_name"
@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"
-            android:text="@string/confirm_gps" />
+            android:text="@string/confirm_search_by_name" />
 
         <Button
             android:id="@+id/undo_request_by_name"

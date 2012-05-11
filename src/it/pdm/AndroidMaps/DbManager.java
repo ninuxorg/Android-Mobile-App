@@ -10,7 +10,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
 
 class DbManager extends AsyncTask<Object,String,Object> {
@@ -35,8 +34,10 @@ class DbManager extends AsyncTask<Object,String,Object> {
        0: getNodes();
        1: getNodeByPosition(lat, lng, grade_lat, grade_lng);
        2: getNodeByPosition(lat, lng);
-       3: insertNodes(map);
-       4: insertNode(mp);
+       3: getNodeByName(name);
+       4: insertNodes(map);
+       5: insertNode(mp);
+       6: getNodeById(id);
     */
 
     @Override
@@ -131,9 +132,23 @@ class DbManager extends AsyncTask<Object,String,Object> {
 				}
     		
     		}
+        	break;
+    	case 6:
+    			
+    		
+    			try {
+    				Integer id=(Integer)params[1];
+    				getNodesById(id);
+    			} catch (DBOpenException e) {
+    				Log.e("DB_ERROR - OPEN DATABASE",e.getMessage());
+    			}
+    			
+    	    	break;	
     	default:
     		return null;
     	}
+    	
+    	
 		return null;
     	
         
@@ -231,6 +246,151 @@ class DbManager extends AsyncTask<Object,String,Object> {
     	
     }
     
+    private ArrayList<MapPoint> getNodeByPosition(Integer lat, Integer lng, Integer grade_lat, Integer grade_lng) throws DBOpenException{
+        
+        ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
+        Cursor cursor;
+        SQLiteDatabase db=null;
+        Integer min_lat=lat-grade_lat;
+        Integer max_lat=lat+grade_lat;
+        Integer min_lng=lng-grade_lng;
+        Integer max_lng=lng+grade_lng;
+        db=openDBR();
+           
+        //select * from Nodes where (lat between [min_lat] AND [max_lat]) and (lng between [min_lng] AND [max_lng]));
+        String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE (lat BETWEEN " +min_lat.toString()+ " AND "+max_lat.toString()+") " +
+        		"AND (lng BETWEEN "+min_lng.toString()+ " AND "+max_lng.toString()+")";
+        cursor= db.rawQuery(sql,null); //ottengo un cursore che punta alle entry ottenute dalla query
+        cursor.moveToFirst();
+        do{
+        	if(cursor!=null && cursor.getCount()>0){
+            	MapPoint node=new MapPoint();
+            	node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
+            	node.setName(cursor.getString(cursor.getColumnIndex("name")));
+            	node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
+            	node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
+            	node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
+            	node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
+            	node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
+                valori.add(node);
+                cursor.moveToNext();
+            }
+            
+        }while(!cursor.isAfterLast());
+
+        cursor.close();
+        db.close();
+        
+    
+        return valori;
+       
+    }
+   
+    private ArrayList<MapPoint> getNodeByPosition(Integer lat, Integer lng) throws DBOpenException{
+        
+    	ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
+        Cursor cursor=null;
+        SQLiteDatabase db=null;
+        
+        db=openDBR();
+           
+         //select * from Nodes where lat=lat AND lng=lng                //"SELECT * FROM Nodes WHERE (? = ?) AND (? = ?)";
+         String sql="(? = ?) AND (? = ?)";
+         String values[]=new String[]{"lat",lat.toString(),"lng",lng.toString()};
+         cursor= db.query(DbHelper.TABLE_NAME1, null, sql, values, null, null, null); //ottengo un cursore che punta alle entry ottenute dalla query
+         cursor.moveToFirst();
+         do{
+                MapPoint node=new MapPoint();
+
+            node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
+            node.setName(cursor.getString(cursor.getColumnIndex("name")));
+            node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
+            node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
+            node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
+            node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
+            node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
+            
+            valori.add(node);
+
+                cursor.moveToNext();
+         }while(!cursor.isAfterLast());
+           
+        
+        return valori;
+       
+    }
+    
+    private ArrayList<MapPoint> getNodeByName(String name) throws DBOpenException{
+        
+        ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
+        Cursor cursor;
+        SQLiteDatabase db=null;
+        db=openDBR();
+           
+        //select * from Nodes where (lat between [min_lat] AND [max_lat]) and (lng between [min_lng] AND [max_lng]));
+        String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE name like '%"+name+"%'";
+        cursor= db.rawQuery(sql,null); //ottengo un cursore che punta alle entry ottenute dalla query
+        cursor.moveToFirst();
+        do{
+        	if(cursor!=null && cursor.getCount()>0){
+            	MapPoint node=new MapPoint();
+            	node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
+            	node.setName(cursor.getString(cursor.getColumnIndex("name")));
+            	node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
+            	node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
+            	node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
+            	node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
+            	node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
+                valori.add(node);
+                cursor.moveToNext();
+            }
+            
+        }while(!cursor.isAfterLast());
+
+        cursor.close();
+        db.close();
+        
+    
+        return valori;
+       
+    }
+    
+    private ArrayList<MapPoint> getNodesById(Integer id) throws DBOpenException{
+    	
+    	
+   	 ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
+        Cursor cursor;
+        SQLiteDatabase db=openDBR();
+        String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE _id='"+id+"'";
+        Log.v("Sql1", sql);
+        //select * from Nodes
+        
+        cursor= db.rawQuery(sql,null); //ottengo un cursore che punta alle entry ottenute dalla query
+        cursor.moveToFirst();
+        do{
+            MapPoint node=new MapPoint();
+            node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
+            node.setName(cursor.getString(cursor.getColumnIndex("name")));
+            node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
+            node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
+            node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
+            node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
+            node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
+            
+            valori.add(node);
+            cursor.moveToNext();
+        }while(!cursor.isAfterLast());
+
+            cursor.close();
+            db.close();
+        
+    
+        return valori;
+   	
+   	
+   	
+   }
+    
     public boolean isEmptyTableNodes() throws DBOpenException{
     	return isEmpty(DbHelper.TABLE_NAME1);
     }
@@ -309,117 +469,6 @@ class DbManager extends AsyncTask<Object,String,Object> {
     	db.close();   
         
     	
-    }
-   
-    private ArrayList<MapPoint> getNodeByPosition(Integer lat, Integer lng, Integer grade_lat, Integer grade_lng) throws DBOpenException{
-       
-        ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
-        Cursor cursor;
-        SQLiteDatabase db=null;
-        Integer min_lat=lat-grade_lat;
-        Integer max_lat=lat+grade_lat;
-        Integer min_lng=lng-grade_lng;
-        Integer max_lng=lng+grade_lng;
-        db=openDBR();
-           
-        //select * from Nodes where (lat between [min_lat] AND [max_lat]) and (lng between [min_lng] AND [max_lng]));
-        String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE (lat BETWEEN " +min_lat.toString()+ " AND "+max_lat.toString()+") " +
-        		"AND (lng BETWEEN "+min_lng.toString()+ " AND "+max_lng.toString()+")";
-        cursor= db.rawQuery(sql,null); //ottengo un cursore che punta alle entry ottenute dalla query
-        cursor.moveToFirst();
-        do{
-        	if(cursor!=null && cursor.getCount()>0){
-            	MapPoint node=new MapPoint();
-            	node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
-            	node.setName(cursor.getString(cursor.getColumnIndex("name")));
-            	node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
-            	node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
-            	node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
-            	node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
-            	node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
-                valori.add(node);
-                cursor.moveToNext();
-            }
-            
-        }while(!cursor.isAfterLast());
-
-        cursor.close();
-        db.close();
-        
-    
-        return valori;
-       
-    }
-    
-
-   
-    private ArrayList<MapPoint> getNodeByPosition(Integer lat, Integer lng) throws DBOpenException{
-        
-    	ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
-        Cursor cursor=null;
-        SQLiteDatabase db=null;
-        
-        db=openDBR();
-           
-         //select * from Nodes where lat=lat AND lng=lng                //"SELECT * FROM Nodes WHERE (? = ?) AND (? = ?)";
-         String sql="(? = ?) AND (? = ?)";
-         String values[]=new String[]{"lat",lat.toString(),"lng",lng.toString()};
-         cursor= db.query(DbHelper.TABLE_NAME1, null, sql, values, null, null, null); //ottengo un cursore che punta alle entry ottenute dalla query
-         cursor.moveToFirst();
-         do{
-                MapPoint node=new MapPoint();
-
-            node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
-            node.setName(cursor.getString(cursor.getColumnIndex("name")));
-            node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
-            node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
-            node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
-            node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
-            node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
-            
-            valori.add(node);
-
-                cursor.moveToNext();
-         }while(!cursor.isAfterLast());
-           
-        
-        return valori;
-       
-    }
-    
-    private ArrayList<MapPoint> getNodeByName(String name) throws DBOpenException{
-        
-        ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
-        Cursor cursor;
-        SQLiteDatabase db=null;
-        db=openDBR();
-           
-        //select * from Nodes where (lat between [min_lat] AND [max_lat]) and (lng between [min_lng] AND [max_lng]));
-        String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE name like '%"+name+"%'";
-        cursor= db.rawQuery(sql,null); //ottengo un cursore che punta alle entry ottenute dalla query
-        cursor.moveToFirst();
-        do{
-        	if(cursor!=null && cursor.getCount()>0){
-            	MapPoint node=new MapPoint();
-            	node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
-            	node.setName(cursor.getString(cursor.getColumnIndex("name")));
-            	node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
-            	node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
-            	node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
-            	node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
-            	node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
-                valori.add(node);
-                cursor.moveToNext();
-            }
-            
-        }while(!cursor.isAfterLast());
-
-        cursor.close();
-        db.close();
-        
-    
-        return valori;
-       
     }
     
     public String getLastUpdate() throws DBOpenException{

@@ -19,12 +19,24 @@
             android:theme="@android:style/Theme.NoTitleBar"
             android:name=".AndroidMapsActivity"
             android:label="@string/app_name" >
+
+        </activity>
+        <activity android:name=".HomeActivity" android:label="@string/app_name"
+          android:theme="@android:style/Theme.NoTitleBar">
+            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            
+            
         </activity>
+        <activity android:name=".ListNodesActivity" android:label="@string/app_name"
+          android:theme="@android:style/Theme.NoTitleBar"></activity>
+                <activity android:name=".AugmentedRealityActivity" android:label="@string/app_name"
+          android:theme="@android:style/Theme.NoTitleBar"></activity>
+                    
     </application>
 
 </manifest>

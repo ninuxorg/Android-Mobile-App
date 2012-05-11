@@ -20,10 +20,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
 import android.util.Log;
-import android.widget.Toast;
 
 public class RestClient {
 

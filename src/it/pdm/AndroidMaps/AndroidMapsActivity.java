@@ -5,16 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import com.google.android.maps.GeoPoint;
-import com.google.android.maps.MapActivity;
-import com.google.android.maps.MapController;
-import com.google.android.maps.MapView;
-import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
-
 import android.app.Dialog;
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -27,18 +19,25 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.MenuItem.OnMenuItemClickListener;
+import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapActivity;
+import com.google.android.maps.MapController;
+import com.google.android.maps.MapView;
+import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
 
 public class AndroidMapsActivity extends MapActivity {
     /** Called when the activity is first created. */
-	
-	
-	static final double MAX_DAYS_FOR_UPDATE=7.0;
 	
 	private List<Overlay> listPoints;
 	private ArrayList<MapPoint> points; //lista dei punti presi tramite Jsonparser
@@ -49,11 +48,13 @@ public class AndroidMapsActivity extends MapActivity {
 	//private MapsParserXml parserSimple;
 	private MapsParserJson parserJson;
 	private GpsManager local;
-	private final String TAG = "AndroidMobileNode: ";
+	private final String TAG = "AndroidMapsActivity - ";
 	static private final int ID_CONFIRM_GPS= 0;
 	static private final int ID_SEARCH_NODES= 1;
 	static private final int ID_SEARCH_NODES_BY_NAME= 2;
-	private final String STRING_CONNECTION = "http://map.ninux.org/nodes.json";
+	/*ASSOLUTAMENTE DA OTTIMIZZARE*/
+	int prec=0;
+	/******************************/
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -90,7 +91,7 @@ public class AndroidMapsActivity extends MapActivity {
 			Log.v("Differenza tra i giorni: ", ""+difference);
 			Log.v("La tabella dei nodi è vuota? Risposta: ",""+isEmptyTableNodes());*/
 			
-			if(difference>MAX_DAYS_FOR_UPDATE || difference<0 || isEmptyTableNodes()){
+			if(difference>HomeActivity.MAX_DAYS_FOR_UPDATE || difference<0 || isEmptyTableNodes()){
 		        	
 		       	getJson(getResponse()); //parsa il file Json recuperato tramite richiesta GET 
 		       	//HTTP utilizzando architettura REST, popola quindi la lista di nodi principale
@@ -404,6 +405,7 @@ public class AndroidMapsActivity extends MapActivity {
     		return dialog_Search_Node_By_Name;		
     	
     case ID_SEARCH_NODES:
+    	
 		final Dialog dialog_Search_Node = new Dialog(this);
 		dialog_Search_Node.setContentView(R.layout.search_nodes);
 		dialog_Search_Node.setTitle("Cerca un nodo per coordinate");
@@ -412,12 +414,42 @@ public class AndroidMapsActivity extends MapActivity {
 		Button undo2=(Button)dialog_Search_Node.findViewById(R.id.undo_request);
 		final EditText latitude=(EditText)dialog_Search_Node.findViewById(R.id.latitude);
 		final EditText longitude=(EditText)dialog_Search_Node.findViewById(R.id.longitude);
-		final EditText precision=(EditText)dialog_Search_Node.findViewById(R.id.precision);
+		final SeekBar precision=(SeekBar)dialog_Search_Node.findViewById(R.id.precision);
+		final TextView label_precision=(TextView)dialog_Search_Node.findViewById(R.id.label_precision2);
 		
+		precision.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+			
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress,
+					boolean fromUser) {
+				
+				if(precision!=null){
+					prec=precision.getProgress();
+				}
+				
+				
+				label_precision.setText(""+prec);
+				
+				
+			}
+		});
 
 		
 		search.setOnClickListener(new OnClickListener() {
 			
+			@SuppressWarnings("unchecked")
 			@Override
 			public void onClick(View v) {
 				
@@ -425,11 +457,9 @@ public class AndroidMapsActivity extends MapActivity {
 		    	DbManager dbmanager= new DbManager(dbh,contx);
 		    	Integer lat=0;
 		    	Integer lng=0;
-		    	Integer prec=0;
 		    	try {
 		    		lat=Integer.parseInt(latitude.getText().toString());
 		    		lng=Integer.parseInt(longitude.getText().toString());
-		    		prec=Integer.parseInt(precision.getText().toString());
 		    		Log.v("","Fields\n\nlat="+lat+"\nlng="+lng+"\nprec="+prec);
 					
 				}catch (NumberFormatException e) {
@@ -484,7 +514,7 @@ public class AndroidMapsActivity extends MapActivity {
 			@Override
 			protected String doInBackground(Void...voids) {
 		
-		RestClient client = new RestClient(STRING_CONNECTION);
+		RestClient client = new RestClient(HomeActivity.STRING_CONNECTION);
 
 		try {
 		    client.Execute(RequestMethod.GET);
@@ -530,6 +560,7 @@ public class AndroidMapsActivity extends MapActivity {
 	  {
 	    double longitudine;
 	    double latitudine;
+	    final private double factor=1E6; 
 
 	    public double setLongitudine(double longitudine) {
 	        return this.longitudine = longitudine;
@@ -547,8 +578,8 @@ public class AndroidMapsActivity extends MapActivity {
 
 
 	        GeoPoint point = new GeoPoint(
-	            (int) (location.getLatitude()), 
-	            (int) (location.getLongitude()));
+	            (int) (location.getLatitude()*factor), 
+	            (int) (location.getLongitude()*factor));
 	        
 	        MapController mapController=mapView.getController();
 	        mapController.animateTo(point);
@@ -557,8 +588,8 @@ public class AndroidMapsActivity extends MapActivity {
 	       
 	        //listOfOverlays.clear();
 	        
-	        OverlayItem overlayitem = new OverlayItem(point, "Tu sei qui!", "Lat: "+(int)latitudine+"\n" +
-					"Long: "+(int)longitudine+"\n");
+	        OverlayItem overlayitem = new OverlayItem(point, "Tu sei qui!", "Lat: "+(int)latitudine*factor+"\n" +
+					"Long: "+(int)longitudine*factor+"\n");
 			marker_special.addOverlay(overlayitem);
 			listPoints.add(marker_special);
 	      }

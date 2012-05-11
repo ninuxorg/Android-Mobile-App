@@ -3,12 +3,19 @@
 
     <string name="hello">Hello World, AndroidMapsActivity!</string>
     <string name="app_name">AndroidMaps</string>
+    <string name="app_name2">Menù Principale</string>
+    <string name="title1">Lista dei Nodi</string>
+    <string name="hint1">Nome del Nodo</string>
     <string name="getGps">Rileva la tua posizione</string>
     <string name="confirm_gps">Confermi</string>
+    <string name="confirm_search_by_name">Confermi</string>
     <string name="undo_request">Annulla</string>
     <string name="latitude">Latitudine</string>
     <string name="longitude">Longitudine</string>
     <string name="precision">Precisione</string>
     <string name="name">Name</string>
+    <string name="label_precision">Precisione</string>
+    <string name="label_precision2">0</string>
+    <string name="search">Cerca</string>
 
 </resources>
