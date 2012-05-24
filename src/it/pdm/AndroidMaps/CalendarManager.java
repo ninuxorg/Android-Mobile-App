@@ -12,8 +12,6 @@ public class CalendarManager {
 	
 	static public Calendar getCalendar() {
 		final Calendar c = Calendar.getInstance();
- 
-		// set current date into datepicker
 		return c;
  
 	}

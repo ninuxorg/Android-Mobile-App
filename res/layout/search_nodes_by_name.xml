@@ -25,6 +25,8 @@
             android:id="@+id/name_to_search"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:maxLength="45"
             android:ems="10"
             android:hint="@string/name"
             android:layout_gravity="center_horizontal" />

@@ -29,31 +29,28 @@ public final class R {
         public static final int red_marker=0x7f02000f;
     }
     public static final class id {
-        public static final int button1=0x7f060005;
-        public static final int confirm_gps=0x7f06000d;
+        public static final int confirm_gps=0x7f06000b;
         public static final int confirm_search=0x7f060014;
-        public static final int confirm_search_by_name=0x7f060016;
-        public static final int data=0x7f060009;
-        public static final int dateText=0x7f060007;
-        public static final int id=0x7f06000a;
-        public static final int imageView1=0x7f06000c;
+        public static final int confirm_search_by_name=0x7f06000d;
+        public static final int dateText=0x7f060006;
+        public static final int id=0x7f060008;
+        public static final int imageView1=0x7f06000a;
         public static final int label_precision1=0x7f060011;
         public static final int label_precision2=0x7f060013;
         public static final int latitude=0x7f06000f;
         public static final int linearLayout1=0x7f060001;
         public static final int linearLayout2=0x7f060004;
         public static final int linearLayout3=0x7f060002;
-        public static final int linearLayout4=0x7f060006;
+        public static final int linearLayout4=0x7f060005;
         public static final int longitude=0x7f060010;
-        public static final int mapview=0x7f060008;
-        public static final int name=0x7f06000b;
-        public static final int name_to_search=0x7f060015;
+        public static final int mapview=0x7f060007;
+        public static final int name=0x7f060009;
+        public static final int name_to_search=0x7f060003;
         public static final int precision=0x7f060012;
-        public static final int show_node=0x7f060018;
+        public static final int show_node=0x7f060015;
         public static final int text1=0x7f060000;
-        public static final int titolo=0x7f060003;
-        public static final int undo_request=0x7f06000e;
-        public static final int undo_request_by_name=0x7f060017;
+        public static final int undo_request=0x7f06000c;
+        public static final int undo_request_by_name=0x7f06000e;
     }
     public static final class layout {
         public static final int ar=0x7f030000;
@@ -64,7 +61,8 @@ public final class R {
         public static final int search_gps=0x7f030005;
         public static final int search_nodes=0x7f030006;
         public static final int search_nodes_by_name=0x7f030007;
-        public static final int show_node=0x7f030008;
+        public static final int search_nodes_position=0x7f030008;
+        public static final int show_node=0x7f030009;
     }
     public static final class raw {
         public static final int map01=0x7f040000;

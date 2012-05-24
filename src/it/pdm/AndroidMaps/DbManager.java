@@ -138,7 +138,7 @@ class DbManager extends AsyncTask<Object,String,Object> {
     		
     			try {
     				Integer id=(Integer)params[1];
-    				getNodesById(id);
+    				return getNodesById(id);
     			} catch (DBOpenException e) {
     				Log.e("DB_ERROR - OPEN DATABASE",e.getMessage());
     			}
@@ -182,14 +182,14 @@ class DbManager extends AsyncTask<Object,String,Object> {
     public void truncateTable(String table) throws DBOpenException{
     	SQLiteDatabase db=null;
     	db=openDBW();
-    	db.execSQL("DELETE FROM "+table);    //cancello il contenuto della tabella nodes
+    	db.execSQL("DELETE FROM "+table);    //cancello il contenuto della tabella <table>
         db.close();
     }
     
     public void deleteTable(String table) throws DBOpenException{
     	SQLiteDatabase db=null;
     	db=openDBW();
-    	db.execSQL("DROP TABLE "+table);    //cancello il contenuto della tabella nodes
+    	db.execSQL("DROP TABLE "+table);    //cancello la tabella <table>
         db.close();
     }
     
@@ -361,29 +361,32 @@ class DbManager extends AsyncTask<Object,String,Object> {
    	 ArrayList<MapPoint> valori=new ArrayList<MapPoint>();
         Cursor cursor;
         SQLiteDatabase db=openDBR();
-        String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE _id='"+id+"'";
-        Log.v("Sql1", sql);
-        //select * from Nodes
+        //String sql="SELECT * FROM "+DbHelper.TABLE_NAME1+" WHERE _id='"+id+"'";
+        //Log.v("Sql1", sql);
         
-        cursor= db.rawQuery(sql,null); //ottengo un cursore che punta alle entry ottenute dalla query
+        String sql="(_id = "+id+")";
+        String values[]=new String[]{"_id",""+id};
+        cursor= db.query(DbHelper.TABLE_NAME1,new String[]{"_id","name","status","lat","lng"}, sql, null, null, null, null);//ottengo un cursore che punta alle entry ottenute dalla query
+
+        Log.v("Current ID FOR DB:",""+id);
+        Log.v("Cursor: ",""+cursor.getCount());
+        
         cursor.moveToFirst();
         do{
             MapPoint node=new MapPoint();
             node.setId(cursor.getInt(cursor.getColumnIndex("_id")));
             node.setName(cursor.getString(cursor.getColumnIndex("name")));
             node.setStatus(cursor.getString(cursor.getColumnIndex("status")));
-            node.setSlug(cursor.getString(cursor.getColumnIndex("slug")));
             node.setLatitude(cursor.getInt(cursor.getColumnIndex("lat")));
             node.setLongitude(cursor.getInt(cursor.getColumnIndex("lng")));
-            node.setJslug(cursor.getString(cursor.getColumnIndex("jslug")));
             
             valori.add(node);
             cursor.moveToNext();
         }while(!cursor.isAfterLast());
-
+        
+        	
             cursor.close();
             db.close();
-        
     
         return valori;
    	
@@ -417,7 +420,7 @@ class DbManager extends AsyncTask<Object,String,Object> {
 
     		int tot=countRows(tableName);
     		
-    		Log.v("Totale delle righe in nodes = ", ""+tot);
+    		Log.v("Totale delle righe in "+tableName+" = ", ""+tot);
     		
     		if(tot !=0){
     			return false;

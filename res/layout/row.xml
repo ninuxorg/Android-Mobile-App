@@ -8,20 +8,10 @@ android:focusable="false"
 >
     
 <TextView
-android:id="@+id/data"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:textSize="20sp"
-android:clickable="false"
-android:focusable="false"
-/>
-
-<TextView
 android:id="@+id/id"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
 android:textSize="20sp"
-android:layout_marginLeft="20dp"
 android:clickable="false"
 android:focusable="false"
 />
@@ -30,8 +20,10 @@ android:focusable="false"
 android:id="@+id/name"
 android:layout_width="wrap_content"
 android:layout_height="wrap_content"
-android:textSize="20dp"
+android:textSize="20sp"
 android:layout_marginLeft="20dp"
+android:clickable="false"
+android:focusable="false"
 />
 
 </LinearLayout>

@@ -1,12 +1,13 @@
 package it.pdm.AndroidMaps;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -48,10 +49,11 @@ public class AndroidMapsActivity extends MapActivity {
 	//private MapsParserXml parserSimple;
 	private MapsParserJson parserJson;
 	private GpsManager local;
-	private final String TAG = "AndroidMapsActivity - ";
+	private  final String TAG = "AndroidMapsActivity - ";
 	static private final int ID_CONFIRM_GPS= 0;
-	static private final int ID_SEARCH_NODES= 1;
+	static private final int ID_SEARCH_NODES_POSITION= 1;
 	static private final int ID_SEARCH_NODES_BY_NAME= 2;
+	static private final int ID_SEARCH_NODES= 3;
 	/*ASSOLUTAMENTE DA OTTIMIZZARE*/
 	int prec=0;
 	/******************************/
@@ -79,6 +81,9 @@ public class AndroidMapsActivity extends MapActivity {
         	
         	parserJson= new MapsParserJson();
         	
+        	//batterymng=new BatteryManager(getApplicationContext());
+        	//batterymng.showBatteryLevel();
+        	
         	String lastDateTime=getLastUpdate();
 			String currentDateTime=getDateTimeSystem();
 				
@@ -93,16 +98,16 @@ public class AndroidMapsActivity extends MapActivity {
 			
 			if(difference>HomeActivity.MAX_DAYS_FOR_UPDATE || difference<0 || isEmptyTableNodes()){
 		        	
-		       	getJson(getResponse()); //parsa il file Json recuperato tramite richiesta GET 
+				getNodes(getJsonFromUrl()); //parsa il file Json recuperato tramite richiesta GET 
 		       	//HTTP utilizzando architettura REST, popola quindi la lista di nodi principale
-		       	createPoints(points); //crea i punti sulla mappa a partire dalla lista di MapPoint
+				drawNodes(points); //crea i punti sulla mappa a partire dalla lista di MapPoint
 		       	insertNodesDB(); //sovrascrive i nodi nella tabella nodes in DB con i nuovi nodi.
 		        	
 		        //----------------------------------------------------------------------//
 			}else{
 				
-				getNodesDB();//legge sul DB e popola la lista di nodi principale.
-				createPoints(points); //crea i punti sulla mappa a partire dalla lista di MapPoint
+				getNodesFromDB();//legge sul DB e popola la lista di nodi principale.
+				drawNodes(points); //crea i punti sulla mappa a partire dalla lista di MapPoint
 			}
 						
 				
@@ -188,7 +193,7 @@ public class AndroidMapsActivity extends MapActivity {
 		return centerMap;
 	}
 	
-	public void createPoints(final ArrayList<MapPoint> m){
+	public void drawNodes(final ArrayList<MapPoint> m){
 		
 		
 		AsyncTask<String, Void, Void> creationPoints = new AsyncTask<String, Void, Void>(){
@@ -217,7 +222,7 @@ public class AndroidMapsActivity extends MapActivity {
 		
 	}
 	
-	public void clearMap(){
+	public void clearNodes(){
 		points.clear();
 		Drawable drawable = this.getResources().getDrawable(R.drawable.antenna);
     	marker = new MapsOverlay(drawable, this);
@@ -234,9 +239,9 @@ public class AndroidMapsActivity extends MapActivity {
         points=parserSimple.getParsedData();
 	}*/
 	
-	public void getJson(String list){
-       parserJson.parseJson(list);//usiamo il parser per scandire il documento Json fornito
-       points=parserJson.getParsedData(); //popoliamo la lista 
+	public void getNodes(String json_list){
+       parserJson.parseJson(json_list);//usiamo il parser per scandire il contenuto fornito
+       points=parserJson.getParsedData(); //preleva la lista dei nodi parsati e popola quella della activity.
 	}
 	
 	@Override
@@ -266,7 +271,7 @@ public class AndroidMapsActivity extends MapActivity {
 			}
 		});
         
-        MenuItem search_by_name=menu.add(0,1,0,"Cerca Nodi Per Nome");
+        /*MenuItem search_by_name=menu.add(0,1,0,"Cerca Nodi Per Nome");
         search_by_name.setIcon(R.drawable.ic_menu_search);
         
         search_by_name.setOnMenuItemClickListener(new OnMenuItemClickListener() {
@@ -276,7 +281,7 @@ public class AndroidMapsActivity extends MapActivity {
 				showDialog(ID_SEARCH_NODES_BY_NAME);
 				return true;
 			}
-		});
+		});*/
         
         return true;
         
@@ -286,10 +291,10 @@ public class AndroidMapsActivity extends MapActivity {
 		DbHelper dbh=new DbHelper(getApplicationContext()); 
     	DbManager dbmanager= new DbManager(dbh,getApplicationContext());
     	dbmanager.setListPoint(points);
-    	dbmanager.execute(4);
+    	dbmanager.execute(4); //this inserts nodes into database
 	}
 	
-	private void getNodesDB() throws InterruptedException, ExecutionException{
+	private void getNodesFromDB() throws InterruptedException, ExecutionException{
 		DbHelper dbh=new DbHelper(getApplicationContext()); 
     	DbManager dbmanager= new DbManager(dbh,getApplicationContext());
     	@SuppressWarnings("unchecked")
@@ -375,8 +380,8 @@ public class AndroidMapsActivity extends MapActivity {
     							showToastShort("The search hasn't produced results!");
     							return;
     						}
-    						clearMap();//cancello tutti gli Overlay e rispettivi piani dalla mappa.
-    						createPoints(searched);
+    						clearNodes();//cancello tutti gli Overlay e rispettivi piani dalla mappa.
+    						drawNodes(searched);
     					}catch (IndexOutOfBoundsException e ){
     						Log.e("ERROR DB NULL POINTER LIST: ",e.getMessage());
     						showToastShort("The search hasn't produced results!");
@@ -403,11 +408,14 @@ public class AndroidMapsActivity extends MapActivity {
     			});
     			
     		return dialog_Search_Node_By_Name;		
-    	
+    
     case ID_SEARCH_NODES:
+    	return createAlertDialog();
+    		
+    case ID_SEARCH_NODES_POSITION:
     	
 		final Dialog dialog_Search_Node = new Dialog(this);
-		dialog_Search_Node.setContentView(R.layout.search_nodes);
+		dialog_Search_Node.setContentView(R.layout.search_nodes_position);
 		dialog_Search_Node.setTitle("Cerca un nodo per coordinate");
 		
 		Button search=(Button)dialog_Search_Node.findViewById(R.id.confirm_search);
@@ -473,8 +481,8 @@ public class AndroidMapsActivity extends MapActivity {
 						showToastShort("The search hasn't produced results!");
 						return;
 					}
-					clearMap();//cancello tutti gli Overlay e rispettivi piani dalla mappa.
-					createPoints(searched);
+					clearNodes();//cancello tutti gli Overlay e rispettivi piani dalla mappa.
+					drawNodes(searched);
 					dialog_Search_Node.dismiss();
 				}catch (IndexOutOfBoundsException e ){
 					Log.e("ERROR DB NULL POINTER LIST: ",e.getMessage());
@@ -506,8 +514,34 @@ public class AndroidMapsActivity extends MapActivity {
     	
     		return null;
 }
+    
+    
+    public AlertDialog createAlertDialog(){
+		
+    	final CharSequence[] items=new CharSequence []{"Per Nome","Per Posizione"};
+    	AlertDialog.Builder builder=new AlertDialog.Builder(this);
+    	builder.setTitle("Ricerca Nodi");
+
+    	builder.setItems(items, new DialogInterface.OnClickListener() {
+
+    	@Override
+    	public void onClick(DialogInterface dialog, int which) {
+    		switch(which){
+    		case 0:
+    			showDialog(ID_SEARCH_NODES_BY_NAME);
+    		break;
+    		case 1:
+    			showDialog(ID_SEARCH_NODES_POSITION);
+    		break;
+    		}
+    	}
+    	});
+
+    	return builder.show();
+    }
+    
 	
-	public String getResponse(){
+	public String getJsonFromUrl(){
 		
 		AsyncTask<Void, Void, String> asyncTask = new AsyncTask<Void, Void, String>(){
 

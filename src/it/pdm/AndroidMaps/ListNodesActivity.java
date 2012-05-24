@@ -4,23 +4,30 @@ package it.pdm.AndroidMaps;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
@@ -38,6 +45,7 @@ public class ListNodesActivity extends ListActivity {
 		private DbHelper dbh;
 		private Context contx;
 		private DbManager dbmanager;
+		private EditText field_search;
         
         public void onCreate(Bundle savedInstanceState) {
         	super.onCreate(savedInstanceState);
@@ -52,19 +60,16 @@ public class ListNodesActivity extends ListActivity {
         	
              	parserJson= new MapsParserJson();
              	listNodes=getListView();
+             	listNodes.setTextFilterEnabled(true);
+
+
+             	field_search=(EditText)findViewById(R.id.name_to_search);
              	listmng=new ListManager(this,listNodes);
         	
              	String lastDateTime=getLastUpdate();
 				String currentDateTime=getDateTimeSystem();
 				
-				/*se ho superato il numero massimo di giorni definiti(controllo vedendo 
-				* lo scarto in giorni tra l'ultimo aggiornamento nel DB e la data corrente) 
-				* tento l'aggiornamento del DB. Altrimenti carico i dati da DB.*/
 				double difference=CalendarManager.differenceDates(currentDateTime, lastDateTime);
-				/*Log.v("Stringa 1: ", currentDateTime);
-				Log.v("Stringa 2: ", lastDateTime);
-				Log.v("Differenza tra i giorni: ", ""+difference);
-				Log.v("La tabella dei nodi è vuota? Risposta: ",""+isEmptyTableNodes());*/
 			
 				if(difference>HomeActivity.MAX_DAYS_FOR_UPDATE || difference<0 || isEmptyTableNodes()){
 		        	
@@ -80,6 +85,32 @@ public class ListNodesActivity extends ListActivity {
 					fillListNodes(); //crea i punti sulla mappa a partire dalla lista di MapPoint
 				}
 				
+				
+             	//setListAdapter(new ArrayAdapter<String>(contx, R.layout.row,prova));
+				
+				
+				field_search.addTextChangedListener(new TextWatcher() {
+					
+					@Override
+					public void onTextChanged(CharSequence s, int start, int before, int count) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void beforeTextChanged(CharSequence s, int start, int count,
+							int after) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void afterTextChanged(Editable s) {
+						Log.v("String taken", s.toString());
+						listmng.filter(s.toString());
+					}
+				});
+				
 				listNodes.setOnItemClickListener(new OnItemClickListener() {
 
 					@Override
@@ -87,6 +118,7 @@ public class ListNodesActivity extends ListActivity {
 							long arg3) {
 						String idItem=""+(Integer)listmng.getMap().get(arg2).get("id");
 						current_item=Integer.parseInt(idItem);
+						Log.v("Current Item in click:", ""+current_item);
 						showDialog(0);
 						
 					}
@@ -230,37 +262,43 @@ public class ListNodesActivity extends ListActivity {
         	    }	
         }
         
-        protected Dialog onCreateDialog(int id) {
+        @Override
+        protected void onPrepareDialog(int id, Dialog dialog) {
+        	// TODO Auto-generated method stub
+        	super.onPrepareDialog(id, dialog);
         	
-        	dbmanager=new DbManager(dbh, contx);
+        	DbManager dbg=new DbManager(dbh,contx);
+        	
+        	dialog.setTitle("Info Nodo");
+			dialog.setContentView(R.layout.show_node);
+			
+			TextView data=(TextView) dialog.findViewById(R.id.show_node);
+		 	
+		ArrayList<MapPoint> map;
+		try {
+			Log.v("Current id=", ""+current_item);
+			map = (ArrayList<MapPoint>)dbg.execute(6,current_item).get();
+			MapPoint unique=map.get(0);
+			String body="Id: "+unique.getId()+"\nName: "+unique.getName()+"\nLat: "+unique.getLatitude()+"\n" +
+					"Long: "+unique.getLongitude()+"\nStatus: "+unique.getStatus()+"\n";
+			data.setText(body);
+		} catch (InterruptedException e) {
+	   		Log.e(TAG, e.toString());
+		} catch (ExecutionException e) {
+	   		Log.e(TAG, e.toString());
+		}
+        	
+        }
+        
+        @SuppressWarnings("unchecked")
+		protected Dialog onCreateDialog(int id) {
+        	
         	
         	switch(id){
         		case ID_SHOW_NODE:
-        			final Dialog dialog_show = new Dialog(this);
-        			dialog_show.setTitle("Info Nodo");
-        			dialog_show.setContentView(R.layout.show_node);
+        			Dialog dialog_show = new Dialog(this);
         			
-	    			TextView data=(TextView) dialog_show.findViewById(R.id.show_node);
-				 	
-				ArrayList<MapPoint> map;
-				try {
-					Log.v("Current id=", ""+current_item);
-					map = (ArrayList<MapPoint>)dbmanager.execute(6,current_item).get();
-					MapPoint unique=map.get(0);
-					String body="Name: "+unique.getName()+"\nLat: "+unique.getLatitude()+"\n" +
-							"Long: "+unique.getLongitude()+"\nStatus: "+unique.getStatus()+"\nSlug: "+unique.getSlug()+"\n"
-							+"Jslug: "+unique.getJslug()+"\n";
-					data.setText(body);
-				} catch (InterruptedException e) {
-			   		Log.e(TAG, e.toString());
-		    		return null;
-				} catch (ExecutionException e) {
-			   		Log.e(TAG, e.toString());
-		    		return null;
-				}
-				 					
-        			
-        			
+				 		
         		return dialog_show;
         		default:
         			return null;
@@ -268,5 +306,7 @@ public class ListNodesActivity extends ListActivity {
         	}
 	
         }
+        
+
         
 }

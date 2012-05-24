@@ -3,7 +3,11 @@ package it.pdm.AndroidMaps;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.regex.Pattern;
+
 import android.content.Context;
+import android.util.Log;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -12,77 +16,90 @@ public class ListManager {
     private String[] from={"id","name"}; //dai valori contenuti in queste chiavi
     private int[] to={R.id.id,R.id.name};//agli id delle view
 	
-    private SimpleAdapter notesAdapter;
+    private SimpleAdapter nodesAdapter;
     private ArrayList<HashMap<String, Object>> items;
+    private ArrayList<HashMap<String, Object>> items_result;
 
     private ListView listaView;
     private Context generic;
-
-    private Integer idItem;
-    private Integer idRow;
     
     public ListManager(Context generic, ListView l) {
     	this.generic=generic;
-    	items=new ArrayList<HashMap<String, Object>>();
     	listaView=l;
+    	items=new ArrayList<HashMap<String, Object>>();
+    	items_result=new ArrayList<HashMap<String, Object>>();
     	refresh();
-    	idItem=0;
-    	idRow=0;
-    }
-    
-    public void setIdItem(Integer id){
-    	idItem=id;
-    }
-    
-    public void setIdRow(Integer id){
-    	idRow=id;
-    }
-    
-    public Integer getIdItem(){
-    	return idItem;
-    }
-    
-    public Integer getIdRow(){
-    	return idRow;
+    	
     }
     
     public ArrayList<HashMap<String, Object>> getMap(){
-    	return items;
+    		return items_result;
+    	
     }
     
-    public void append(Integer id,String name){
+    public void append(ArrayList<HashMap<String, Object>> arraymap,Integer id,String name){
     	HashMap<String, Object> map=new HashMap<String, Object>();
     	map.put("id", id);
     	map.put("name", name);
-    	items.add(0,map);
-    	refresh();
+    	arraymap.add(0,map);
+    }
+    
+    public void append(Integer id,String name){
+    	append(items,id,name);
     }
     
     
     
-    public void load(ArrayList<MapPoint> list){
-    	items.clear();
+    public void load(ArrayList<HashMap<String, Object>> arraymap,ArrayList<MapPoint> list){
+    	arraymap.clear();
     	
     	for(MapPoint point : list){
     		String name=point.getName();
     		Integer id=point.getId();
     		
-			HashMap<String, Object> map=new HashMap<String, Object>();
-	    	map.put("id", id);
-	    	map.put("name", name);
-	    	items.add(map);
+    		append(arraymap,id,name);
     	}
-    	
+    }
+    
+    public void load(ArrayList<MapPoint> list){
+    	load(items,list);
+    	load(items_result,list);
     	refresh();
     }
     
     
-    public void refresh(){
+    public void refresh(ArrayList<HashMap<String, Object>> items){
     	
-    	notesAdapter=new SimpleAdapter(generic,items,R.layout.row,from,to);
-    	listaView.setAdapter(notesAdapter);
+    	nodesAdapter=new SimpleAdapter(generic,items,R.layout.row,from,to);
+    	listaView.setAdapter(nodesAdapter);
     	listaView.setItemsCanFocus(false);
 
+    	
+    }
+    
+    public void refresh(){
+    	refresh(this.items);
+    }
+    
+    public void filter(String s){
+    	
+    	Iterator<HashMap<String, Object>> handle=items.iterator();
+    	items_result.clear();
+    	do{
+    		
+    		HashMap<String, Object> item=handle.next();
+    		String name=(String)item.get("name");
+    		
+    		boolean match=Pattern.compile(Pattern.quote(s), Pattern.CASE_INSENSITIVE).matcher(name).find();
+    		
+    		if(match){
+    			append(items_result, (Integer)item.get("id"), (String)item.get("name"));
+    		}
+    		
+    	}while(handle.hasNext());
+    	
+    	
+    	refresh(items_result);
     	
     }
     
@@ -95,3 +112,40 @@ public class ListManager {
     }
 	
 }
+
+
+/*class mySimpleAdapter extends SimpleAdapter{
+	
+	public mySimpleAdapter(Context generic,ArrayList<HashMap<String, Object>> items,
+			int id_layout,String[] from, int[] to) {
+		super(generic,items,id_layout,from,to);
+	}
+	
+	   @Override
+	    public Filter getFilter() {
+	        return new Filter() {
+	            @SuppressWarnings("unchecked")
+	            @Override
+	            protected void publishResults(CharSequence constraint, FilterResults results) {
+	                Log.d(Constants.TAG, "**** PUBLISHING RESULTS for: " + constraint);
+	                myData = (List<MyDataType>) results.values;
+	                MyCustomAdapter.this.notifyDataSetChanged();
+	            }
+
+	            @Override
+	            protected FilterResults performFiltering(CharSequence constraint) {
+	                Log.d(Constants.TAG, "**** PERFORM FILTERING for: " + constraint);
+	                List<MyDataType> filteredResults = getFilteredResults(constraint);
+
+	                FilterResults results = new FilterResults();
+	                results.values = filteredResults;
+
+	                return results;
+	            }
+	        };
+	    }
+
+	
+	
+	
+}*/
