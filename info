@@ -1,0 +1,22 @@
+
+
+Apro l'applicazione -----> controllo DB (è vuoto?) (1 - SI) (2 - NO)
+
+
+(1) Lo devo riempire in qualche modo ----> [Aggiungi Nodi] ----> ActivitySource - From URL (A) - From File(B) - From Form(C)
+(2) Se voglio generare nuovi dati -----> [Aggiungi Nodi] nell'option menù 
+
+(A) prende un file json da URL definito nelle settings
+
+Se il DB non è vuoto, chiedo all'utente se vuole salvare un file json in SD.
+
+(B) processa un file il quale URI è passato dall'utente
+
+Se il DB non è vuoto, chiedo all'utente se vuole salvare un file json in SD.
+
+(C) riempie form inserimento nuovo nodo, all'inserimento lo aggiungo in lista e aggiorno il DB. 
+
+04PGitAi5-7zElIrX9Oz40wHE4zVhum3tpqcX8A - Release
+04PGitAi5-7wgNqn-XcWAXgiwUE3wruMNbkh7hg - Debugg
+
+
